@@ -1,0 +1,26 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap');
+
+@theme {
+  --font-sans: "Almarai", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply antialiased text-black bg-white;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    overscroll-behavior-y: contain;
+  }
+  
+  /* Allow text selection in inputs and textareas */
+  input, textarea {
+    user-select: text;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

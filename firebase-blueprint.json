@@ -1,0 +1,83 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "A product available in the store.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The unique ID used in the URL (e.g., aura-pro-1)." },
+        "name": { "type": "string", "description": "Display name of the product." },
+        "tagline": { "type": "string", "description": "Short catchy description." },
+        "price": { "type": "number", "description": "Current selling price." },
+        "originalPrice": { "type": "number", "description": "Original price before discount." },
+        "description": { "type": "string", "description": "Detailed product description." },
+        "benefits": { "type": "array", "items": { "type": "string" }, "description": "List of key features/benefits." },
+        "images": { "type": "array", "items": { "type": "string" }, "description": "List of image URLs." },
+        "rating": { "type": "number", "description": "Average rating." },
+        "reviewCount": { "type": "number", "description": "Number of reviews." },
+        "stock": { "type": "number", "description": "Available stock." },
+        "category": { "type": "string", "description": "Product category." },
+        "discountPercent": { "type": "number", "description": "Optional specific discount percentage." },
+        "videoUrl": { "type": "string", "description": "Optional YouTube video URL." }
+      },
+      "required": ["id", "name", "price", "description", "images"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "A customer order.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique order ID." },
+        "customerName": { "type": "string", "description": "Full name of the customer." },
+        "phone": { "type": "string", "description": "Primary phone number." },
+        "phone2": { "type": "string", "description": "Secondary phone number." },
+        "wilaya": { "type": "string", "description": "Selected wilaya." },
+        "commune": { "type": "string", "description": "Selected commune." },
+        "address": { "type": "string", "description": "Detailed delivery address." },
+        "deliveryType": { "type": "string", "enum": ["home", "office"], "description": "Type of delivery." },
+        "total": { "type": "number", "description": "Total order amount including shipping." },
+        "deliveryCost": { "type": "number", "description": "The cost of delivery for this order." },
+        "status": { "type": "string", "enum": ["pending", "confirmed"], "description": "Order status." },
+        "date": { "type": "string", "description": "Date of order." },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "product": { "$ref": "Product" },
+              "quantity": { "type": "number" }
+            }
+          }
+        }
+      },
+      "required": ["customerName", "phone", "wilaya", "commune", "total", "status", "date", "items"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Global store settings.",
+      "type": "object",
+      "properties": {
+        "delivery": {
+          "type": "object",
+          "properties": {
+            "freeShippingThreshold": { "type": "number" },
+            "wilayaCosts": { "type": "object", "additionalProperties": { "type": "object", "properties": { "home": { "type": "number" }, "office": { "type": "number" } } } }
+          }
+        },
+        "promo": {
+          "type": "object",
+          "properties": {
+            "discountPercent": { "type": "number" },
+            "isActive": { "type": "boolean" }
+          }
+        },
+        "communes": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } }
+      }
+    }
+  },
+  "firestore": {
+    "/products/{productId}": { "schema": "Product", "description": "Collection of products." },
+    "/orders/{orderId}": { "schema": "Order", "description": "Collection of orders." },
+    "/settings/global": { "schema": "Settings", "description": "Global settings document." }
+  }
+}
