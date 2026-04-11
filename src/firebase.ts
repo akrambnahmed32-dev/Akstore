@@ -30,16 +30,25 @@ export const db = initializeFirestore(app, {
 }, firebaseConfig.firestoreDatabaseId);
 
 // Enable offline persistence to reduce database reads
-import { enableIndexedDbPersistence } from 'firebase/firestore';
-if (typeof window !== 'undefined') {
-  enableIndexedDbPersistence(db).catch((err) => {
-    if (err.code === 'failed-precondition') {
-      console.warn('Persistence failed: Multiple tabs open');
-    } else if (err.code === 'unimplemented') {
-      console.warn('Persistence failed: Browser not supported');
+import { enableIndexedDbPersistence, terminate, clearIndexedDbPersistence } from 'firebase/firestore';
+
+const enablePersistence = async () => {
+  if (typeof window !== 'undefined') {
+    try {
+      await enableIndexedDbPersistence(db);
+    } catch (err: any) {
+      if (err.code === 'failed-precondition') {
+        console.warn('Persistence failed: Multiple tabs open');
+      } else if (err.code === 'unimplemented') {
+        console.warn('Persistence failed: Browser not supported');
+      } else {
+        console.warn('Persistence error:', err.message);
+      }
     }
-  });
-}
+  }
+};
+
+enablePersistence();
 
 export const googleProvider = new GoogleAuthProvider();
 

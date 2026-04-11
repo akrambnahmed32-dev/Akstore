@@ -8,24 +8,19 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Aura Pro" />
     <link rel="apple-touch-icon" href="https://picsum.photos/seed/aura/192/192" />
-    <link rel="manifest" href="/manifest.json" />
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <title>Aura Pro Store</title>
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').then(reg => {
-            console.log('SW registered:', reg);
-          }).catch(err => {
-            console.log('SW registration failed:', err);
-          });
-        });
-      }
-    </script>
+    <!-- Service Worker Disabled for Debugging -->
   </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+  <body style="background-color: #f0f0f0;">
+    <div id="root">
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; color: #333;">
+        <div style="font-size: 24px; font-weight: bold; margin-bottom: 10px;">Aura Pro Store</div>
+        <div>جاري تحميل المتجر...</div>
+      </div>
+    </div>
+    <script type="module" src="src/main.tsx"></script>
   </body>
 </html>
 

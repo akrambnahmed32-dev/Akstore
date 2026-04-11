@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, Component } from 'react';
 import { 
-  BrowserRouter, Routes, Route, Link, useParams, useNavigate, useLocation
+  HashRouter, Routes, Route, Link, useParams, useNavigate, useLocation
 } from 'react-router-dom';
 import { 
   ShoppingCart, Menu, X, Star, ChevronRight, ChevronLeft, ArrowRight, Check, Clock, ShieldCheck, 
@@ -2974,9 +2974,9 @@ interface Order {
 export default function App() {
   return (
     <ErrorBoundary>
-      <BrowserRouter>
+      <HashRouter>
         <MainApp />
-      </BrowserRouter>
+      </HashRouter>
     </ErrorBoundary>
   );
 }

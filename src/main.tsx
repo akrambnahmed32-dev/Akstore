@@ -3,7 +3,19 @@ import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
-// Register Service Worker for notifications
+// Global error handler for debugging
+window.onerror = function(message, source, lineno, colno, error) {
+  console.error('Global error:', message, 'at', source, ':', lineno);
+  const root = document.getElementById('root');
+  if (root && root.innerHTML.includes('جاري تحميل')) {
+    root.innerHTML = `<div style="padding: 20px; color: red; font-family: sans-serif;">
+      خطأ في التحميل: ${message}<br/>
+      يرجى محاولة تحديث الصفحة.
+    </div>`;
+  }
+};
+
+/* Service Worker Disabled for Debugging
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
@@ -15,6 +27,7 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
+*/
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
