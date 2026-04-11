@@ -2838,7 +2838,14 @@ function MainApp() {
   const location = useLocation();
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    try {
+      const cached = localStorage.getItem('aura_cart');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+      return [];
+    }
+  });
   const [orders, setOrders] = useState<Order[]>([]);
   
   // Initialize from localStorage for speed and quota saving
@@ -2880,8 +2887,12 @@ function MainApp() {
   }, [user]);
 
   useEffect(() => {
-    const history = localStorage.getItem('notification_history');
-    if (history) setNotificationHistory(JSON.parse(history));
+    try {
+      const history = localStorage.getItem('notification_history');
+      if (history) setNotificationHistory(JSON.parse(history));
+    } catch (e) {
+      console.warn("Failed to load notification history");
+    }
   }, []);
 
   const addNotificationToHistory = (title: string, body: string) => {

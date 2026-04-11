@@ -3,6 +3,8 @@ import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 
+console.log('Aura Pro Store: Main script starting...');
+
 // Global error handler for debugging
 window.onerror = function(message, source, lineno, colno, error) {
   console.error('Global error:', message, 'at', source, ':', lineno);
