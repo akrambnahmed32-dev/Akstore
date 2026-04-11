@@ -2457,154 +2457,6 @@ const AdminPanel = ({
             </div>
           ) : (
             <div className="space-y-10 max-w-3xl mx-auto">
-              {/* Install App Section */}
-              <section className="p-6 bg-black text-white rounded-[2rem] shadow-xl overflow-hidden relative">
-                <div className="relative z-10">
-                  <h3 className="font-black text-lg mb-2 flex items-center gap-2"><Smartphone size={20} /> تثبيت التطبيق على هاتفك</h3>
-                  
-                  {deferredPrompt ? (
-                    <>
-                      <p className="text-xs text-neutral-400 mb-4 leading-relaxed">
-                        قم بتثبيت Aura Pro Store كتطبيق مستقل للحصول على تجربة أسرع وتنبيهات فورية في لوحة الإشعارات.
-                      </p>
-                      <button 
-                        onClick={installApp}
-                        className="w-full py-3 bg-white text-black rounded-xl text-xs font-black hover:bg-neutral-100 transition-all"
-                      >
-                        تثبيت التطبيق الآن
-                      </button>
-                    </>
-                  ) : (
-                    <div className="space-y-4">
-                      <p className="text-xs text-neutral-400 leading-relaxed">
-                        لتحويل المتجر إلى تطبيق على هاتفك، يرجى اتباع الخطوات التالية:
-                      </p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                          <div className="font-bold text-[10px] text-white mb-1">على أندرويد (Chrome)</div>
-                          <p className="text-[9px] text-neutral-400">اضغط على النقاط الثلاث (⋮) ثم اختر "إضافة إلى الشاشة الرئيسية".</p>
-                        </div>
-                        <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                          <div className="font-bold text-[10px] text-white mb-1">على آيفون (Safari)</div>
-                          <p className="text-[9px] text-neutral-400">اضغط على زر المشاركة (↑) ثم اختر "إضافة إلى الشاشة الرئيسية".</p>
-                        </div>
-                      </div>
-                      <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/20">
-                        <p className="text-[9px] text-amber-200 leading-relaxed">
-                          <strong>ملاحظة:</strong> إذا كنت تتصفح من داخل AI Studio، يرجى الضغط على <strong>"فتح في نافذة جديدة"</strong> أسفل الشاشة أولاً لتتمكن من التثبيت.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
-              </section>
-
-              {/* Notifications Settings */}
-              <section className="p-6 bg-neutral-50 rounded-[2rem] border border-neutral-100">
-                <h3 className="font-black mb-4 flex items-center gap-2"><Bell size={20} /> نظام التنبيهات</h3>
-                <div className="space-y-4">
-                  <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
-                        <Smartphone size={18} />
-                      </div>
-                      <div>
-                        <div className="font-bold text-xs text-blue-900">للمستخدمين على الهاتف</div>
-                        <p className="text-[10px] text-blue-700 mt-1 leading-relaxed">
-                          لضمان وصول التنبيهات إلى لوحة الإشعارات في هاتفك، يرجى:
-                          <br />
-                          1. الضغط على <strong>"فتح في نافذة جديدة"</strong> أسفل الشاشة.
-                          <br />
-                          2. إضافة التطبيق إلى <strong>الشاشة الرئيسية</strong> (Add to Home Screen).
-                          <br />
-                          3. التأكد من منح إذن التنبيهات عند الطلب.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-neutral-100">
-                    <div>
-                      <div className="font-bold text-sm">حالة التنبيهات</div>
-                      <div className="text-[10px] text-neutral-500">تلقي إشعارات عند وجود طلبات جديدة</div>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <div className="flex items-center gap-2">
-                        {typeof Notification === 'undefined' ? (
-                          <span className="text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-1 rounded-lg">غير مدعوم</span>
-                        ) : Notification.permission === 'granted' ? (
-                          <span className="text-[10px] text-green-600 font-bold bg-green-50 px-2 py-1 rounded-lg">مفعلة</span>
-                        ) : Notification.permission === 'denied' ? (
-                          <span className="text-[10px] text-red-600 font-bold bg-red-50 px-2 py-1 rounded-lg">مرفوضة</span>
-                        ) : (
-                          <span className="text-[10px] text-neutral-400 font-bold bg-neutral-100 px-2 py-1 rounded-lg">غير مفعلة</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {typeof Notification !== 'undefined' && Notification.permission === 'granted' && (
-                          <button 
-                            onClick={() => {
-                              showNotification('تنبيه تجريبي', {
-                                body: 'هذا تنبيه تجريبي للتأكد من أن نظام التنبيهات يعمل بشكل صحيح على هاتفك.',
-                                icon: 'https://picsum.photos/seed/aura/192/192',
-                                badge: 'https://picsum.photos/seed/aura/192/192',
-                                tag: 'test-notification'
-                              });
-                              const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-                              audio.play().catch(e => console.warn('Audio playback prevented:', e));
-                            }}
-                            className="text-[10px] text-blue-600 font-bold underline"
-                          >
-                            تجربة التنبيه
-                          </button>
-                        )}
-                        {typeof Notification !== 'undefined' && Notification.permission !== 'granted' && (
-                          <button 
-                            onClick={async () => {
-                              const result = await Notification.requestPermission();
-                              window.location.reload();
-                            }}
-                            className="text-[10px] text-[#F8A192] font-bold underline"
-                          >
-                            {Notification.permission === 'denied' ? 'إعادة المحاولة (بعد التغيير من الإعدادات)' : 'طلب الإذن الآن'}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {typeof Notification !== 'undefined' && Notification.permission === 'granted' && (
-                    <button 
-                      onClick={() => {
-                        showNotification('تنبيه تجريبي', {
-                          body: 'هذا تنبيه تجريبي للتأكد من عمل النظام بنجاح.',
-                          icon: 'https://picsum.photos/seed/aura/192/192',
-                          badge: 'https://picsum.photos/seed/aura/192/192',
-                          tag: 'test-notification'
-                        });
-                        try {
-                          const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-                          audio.play().catch(e => console.warn('Audio playback prevented:', e));
-                        } catch (e) {}
-                      }}
-                      className="w-full py-3 bg-neutral-100 rounded-xl text-xs font-black hover:bg-neutral-200 transition-all"
-                    >
-                      إرسال تنبيه تجريبي
-                    </button>
-                  )}
-                  
-                  {typeof Notification !== 'undefined' && Notification.permission === 'default' && (
-                    <button 
-                      onClick={() => Notification.requestPermission().then(() => window.location.reload())}
-                      className="w-full py-3 bg-black text-white rounded-xl text-xs font-black hover:bg-neutral-800 transition-all"
-                    >
-                      تفعيل التنبيهات الآن
-                    </button>
-                  )}
-                </div>
-              </section>
-
               {/* Anderson Express Integration */}
               <section className="p-6 bg-neutral-50 rounded-[2rem] border border-neutral-100">
                 <h3 className="font-black mb-4 flex items-center gap-2"><Truck size={20} /> الربط مع Anderson Express</h3>
@@ -2982,102 +2834,6 @@ export default function App() {
   );
 }
 
-// --- Auth Modal Component ---
-const AuthModal = ({ 
-  email, setEmail, password, setPassword, onSubmit, onGoogleLogin, isSubmitting, onClose 
-}: { 
-  email: string;
-  setEmail: (val: string) => void;
-  password: string;
-  setPassword: (val: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
-  onGoogleLogin: () => void;
-  isSubmitting: boolean;
-  onClose: () => void;
-}) => {
-  return (
-    <>
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
-      />
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-md bg-white rounded-3xl shadow-2xl z-[101] overflow-hidden"
-        dir="rtl"
-      >
-        <div className="p-8">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-bold text-neutral-900">تسجيل الدخول</h2>
-            <button onClick={onClose} className="p-2 hover:bg-neutral-100 rounded-full transition-colors">
-              <X size={24} />
-            </button>
-          </div>
-
-          <button 
-            onClick={onGoogleLogin}
-            className="w-full border border-neutral-200 py-4 rounded-xl font-medium hover:bg-neutral-50 transition-all flex items-center justify-center gap-3 mb-8"
-          >
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" className="w-5 h-5" />
-            <span>تسجيل الدخول بجوجل</span>
-          </button>
-
-          <div className="relative mb-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-neutral-200"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-neutral-500">أو عبر البريد</span>
-            </div>
-          </div>
-
-          <form onSubmit={onSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">البريد الإلكتروني</label>
-              <input 
-                type="email" 
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-black outline-none transition-all"
-                placeholder="example@mail.com"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">كلمة المرور</label>
-              <input 
-                type="password" 
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-black outline-none transition-all"
-                placeholder="••••••••"
-              />
-            </div>
-
-            <button 
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-black text-white py-4 rounded-xl font-bold hover:bg-neutral-800 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {isSubmitting ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                'دخول بالبريد'
-              )}
-            </button>
-          </form>
-        </div>
-      </motion.div>
-    </>
-  );
-};
-
 function MainApp() {
   const location = useLocation();
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -3105,9 +2861,6 @@ function MainApp() {
   const [notificationHistory, setNotificationHistory] = useState<{id: string, title: string, body: string, date: string}[]>([]);
   const [showAdminBanner, setShowAdminBanner] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [quotaExceeded, setQuotaExceeded] = useState(false);
 
   useEffect(() => {
@@ -3328,40 +3081,16 @@ function MainApp() {
     };
   }, [user]);
 
-  const handleLogin = () => {
-    setIsAuthModalOpen(true);
-  };
-
-  const handleEmailAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      setToast({ message: 'تم تسجيل الدخول بنجاح', type: 'success' });
-      setIsAuthModalOpen(false);
-      setEmail('');
-      setPassword('');
-    } catch (error: any) {
-      console.error('Auth failed:', error);
-      let message = 'خطأ في الدخول. يرجى التأكد من البيانات.';
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
-      }
-      setToast({ message, type: 'error' });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
+  const handleLogin = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-      setIsAuthModalOpen(false);
     } catch (error: any) {
       console.error('Google login failed:', error);
       let message = 'فشل تسجيل الدخول بجوجل.';
       if (error.code === 'auth/unauthorized-domain') {
-        message = 'هذا النطاق غير مصرح به في Firebase.';
+        message = 'هذا النطاق غير مصرح به في Firebase. يرجى إضافة رابط الموقع إلى Authorized Domains في إعدادات Firebase.';
+      } else if (error.code === 'auth/popup-blocked') {
+        message = 'تم حظر النافذة المنبثقة. يرجى السماح بالنوافذ المنبثقة للموقع.';
       }
       setToast({ message, type: 'error' });
     }
@@ -4104,21 +3833,6 @@ function MainApp() {
               )}
             </motion.div>
           </>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {isAuthModalOpen && (
-          <AuthModal 
-            email={email}
-            setEmail={setEmail}
-            password={password}
-            setPassword={setPassword}
-            onSubmit={handleEmailAuth}
-            onGoogleLogin={handleGoogleLogin}
-            isSubmitting={isSubmitting}
-            onClose={() => setIsAuthModalOpen(false)}
-          />
         )}
       </AnimatePresence>
 
