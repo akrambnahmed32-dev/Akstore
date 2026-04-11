@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Product, PRODUCTS, REVIEWS, TRUST_BADGES, WILAYAS, COMMUNES } from './constants';
 import { 
   db, auth, googleProvider, signInWithPopup, onAuthStateChanged, 
+  signInWithEmailAndPassword, createUserWithEmailAndPassword,
   collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, query, orderBy, limit,
   handleFirestoreError, OperationType, User as FirebaseUser, increment 
 } from './firebase';
@@ -2981,6 +2982,102 @@ export default function App() {
   );
 }
 
+// --- Auth Modal Component ---
+const AuthModal = ({ 
+  email, setEmail, password, setPassword, onSubmit, onGoogleLogin, isSubmitting, onClose 
+}: { 
+  email: string;
+  setEmail: (val: string) => void;
+  password: string;
+  setPassword: (val: string) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  onGoogleLogin: () => void;
+  isSubmitting: boolean;
+  onClose: () => void;
+}) => {
+  return (
+    <>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
+      />
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-md bg-white rounded-3xl shadow-2xl z-[101] overflow-hidden"
+        dir="rtl"
+      >
+        <div className="p-8">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-2xl font-bold text-neutral-900">تسجيل الدخول</h2>
+            <button onClick={onClose} className="p-2 hover:bg-neutral-100 rounded-full transition-colors">
+              <X size={24} />
+            </button>
+          </div>
+
+          <button 
+            onClick={onGoogleLogin}
+            className="w-full border border-neutral-200 py-4 rounded-xl font-medium hover:bg-neutral-50 transition-all flex items-center justify-center gap-3 mb-8"
+          >
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" className="w-5 h-5" />
+            <span>تسجيل الدخول بجوجل</span>
+          </button>
+
+          <div className="relative mb-8">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-neutral-200"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-white text-neutral-500">أو عبر البريد</span>
+            </div>
+          </div>
+
+          <form onSubmit={onSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-1">البريد الإلكتروني</label>
+              <input 
+                type="email" 
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-black outline-none transition-all"
+                placeholder="example@mail.com"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-1">كلمة المرور</label>
+              <input 
+                type="password" 
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-black outline-none transition-all"
+                placeholder="••••••••"
+              />
+            </div>
+
+            <button 
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-black text-white py-4 rounded-xl font-bold hover:bg-neutral-800 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {isSubmitting ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                'دخول بالبريد'
+              )}
+            </button>
+          </form>
+        </div>
+      </motion.div>
+    </>
+  );
+};
+
 function MainApp() {
   const location = useLocation();
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -3007,6 +3104,10 @@ function MainApp() {
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' } | null>(null);
   const [notificationHistory, setNotificationHistory] = useState<{id: string, title: string, body: string, date: string}[]>([]);
   const [showAdminBanner, setShowAdminBanner] = useState(true);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [quotaExceeded, setQuotaExceeded] = useState(false);
 
   useEffect(() => {
@@ -3227,21 +3328,41 @@ function MainApp() {
     };
   }, [user]);
 
-  const handleLogin = async () => {
+  const handleLogin = () => {
+    setIsAuthModalOpen(true);
+  };
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      setToast({ message: 'تم تسجيل الدخول بنجاح', type: 'success' });
+      setIsAuthModalOpen(false);
+      setEmail('');
+      setPassword('');
+    } catch (error: any) {
+      console.error('Auth failed:', error);
+      let message = 'خطأ في الدخول. يرجى التأكد من البيانات.';
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+      }
+      setToast({ message, type: 'error' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
+      setIsAuthModalOpen(false);
     } catch (error: any) {
-      console.error('Login failed:', error);
-      let message = 'فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.';
-      
+      console.error('Google login failed:', error);
+      let message = 'فشل تسجيل الدخول بجوجل.';
       if (error.code === 'auth/unauthorized-domain') {
-        message = 'هذا النطاق غير مصرح به في Firebase. يرجى إضافة رابط الموقع إلى Authorized Domains في إعدادات Firebase.';
-      } else if (error.code === 'auth/popup-blocked') {
-        message = 'تم حظر النافذة المنبثقة. يرجى السماح بالنوافذ المنبثقة للموقع.';
-      } else if (error.code === 'auth/cancelled-popup-request') {
-        return; // User closed the popup, no need for error
+        message = 'هذا النطاق غير مصرح به في Firebase.';
       }
-      
       setToast({ message, type: 'error' });
     }
   };
@@ -3983,6 +4104,21 @@ function MainApp() {
               )}
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isAuthModalOpen && (
+          <AuthModal 
+            email={email}
+            setEmail={setEmail}
+            password={password}
+            setPassword={setPassword}
+            onSubmit={handleEmailAuth}
+            onGoogleLogin={handleGoogleLogin}
+            isSubmitting={isSubmitting}
+            onClose={() => setIsAuthModalOpen(false)}
+          />
         )}
       </AnimatePresence>
 
