@@ -627,7 +627,7 @@ const ProductCard: React.FC<{
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
             {product.images.map((_, idx) => (
               <div 
-                key={idx} 
+                key={`dot-${idx}`} 
                 className={`w-1.5 h-1.5 rounded-full transition-all ${hoveredImage === idx ? 'bg-[#F8A192] w-4' : 'bg-white/50'}`} 
               />
             ))}
@@ -1087,7 +1087,7 @@ const ProductDetail = ({
               <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
                 {product.images.map((img, idx) => (
                   <button 
-                    key={idx}
+                    key={`thumb-${idx}`}
                     onClick={() => setActiveImage(idx)}
                     className={`relative w-24 aspect-[4/5] rounded-2xl overflow-hidden flex-shrink-0 border-2 transition-all ${activeImage === idx ? 'border-[#F8A192] scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`}
                   >
@@ -1118,7 +1118,7 @@ const ProductDetail = ({
             </p>
             <ul className="space-y-4">
               {(product.benefits?.length ? product.benefits : ['جودة عالية وضمان حقيقي', 'تصميم مريح وسهل الاستخدام', 'أداء قوي يدوم طويلاً', 'متوفر بألوان وتصاميم متنوعة']).map((feature, i) => (
-                <li key={i} className="flex items-center gap-3 text-lg font-bold">
+                <li key={`benefit-${i}`} className="flex items-center gap-3 text-lg font-bold">
                   <div className="w-6 h-6 rounded-full bg-[#F8A192] flex items-center justify-center text-white">
                     <Check size={14} strokeWidth={4} />
                   </div>
@@ -1145,7 +1145,7 @@ const ProductDetail = ({
               { title: 'الدفع عند الاستلام', desc: 'لا تدفع حتى تستلم طلبيتك وتفحصها' },
               { title: 'خدمة ما بعد البيع', desc: 'فريقنا جاهز للرد على استفساراتكم' }
             ].map((item, i) => (
-              <div key={i} className="space-y-2">
+              <div key={`reason-${i}`} className="space-y-2">
                 <div className="text-2xl font-black">{item.title}</div>
                 <p className="text-neutral-500">{item.desc}</p>
               </div>
@@ -1549,7 +1549,7 @@ const ProductEditor = ({
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {editedProduct.sizes?.map((size, idx) => (
-                      <div key={idx} className="bg-neutral-100 px-3 py-1.5 rounded-xl flex items-center gap-2 font-bold text-sm">
+                      <div key={`edit-size-${size}-${idx}`} className="bg-neutral-100 px-3 py-1.5 rounded-xl flex items-center gap-2 font-bold text-sm">
                         {size}
                         <button onClick={() => {
                           const newSizes = [...(editedProduct.sizes || [])];
@@ -1580,7 +1580,7 @@ const ProductEditor = ({
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {editedProduct.colors?.map((color, idx) => (
-                      <div key={idx} className="bg-neutral-100 px-3 py-1.5 rounded-xl flex items-center gap-2 font-bold text-sm">
+                      <div key={`edit-color-${color}-${idx}`} className="bg-neutral-100 px-3 py-1.5 rounded-xl flex items-center gap-2 font-bold text-sm">
                         {color}
                         <button onClick={() => {
                           const newColors = [...(editedProduct.colors || [])];
@@ -1658,7 +1658,7 @@ const ProductEditor = ({
               
               <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
                 {editedProduct.images?.map((img, idx) => (
-                  <div key={idx} className="relative flex-shrink-0">
+                  <div key={`edit-img-${idx}`} className="relative flex-shrink-0">
                     <button 
                       onClick={() => setActiveImage(idx)}
                       className={`relative w-24 aspect-[4/5] rounded-2xl overflow-hidden border-2 transition-all ${activeImage === idx ? 'border-[#F8A192] scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`}
@@ -1854,7 +1854,7 @@ const ProductEditor = ({
               />
               <div className="space-y-4">
                 {editedProduct.benefits?.map((feature, i) => (
-                  <div key={i} className="flex items-center gap-3 group">
+                  <div key={`edit-benefit-${i}`} className="flex items-center gap-3 group">
                     <div className="w-6 h-6 rounded-full bg-[#F8A192] flex items-center justify-center text-white flex-shrink-0">
                       <Check size={14} strokeWidth={4} />
                     </div>
@@ -3230,8 +3230,19 @@ function MainApp() {
   const handleLogin = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login failed:', error);
+      let message = 'فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.';
+      
+      if (error.code === 'auth/unauthorized-domain') {
+        message = 'هذا النطاق غير مصرح به في Firebase. يرجى إضافة رابط الموقع إلى Authorized Domains في إعدادات Firebase.';
+      } else if (error.code === 'auth/popup-blocked') {
+        message = 'تم حظر النافذة المنبثقة. يرجى السماح بالنوافذ المنبثقة للموقع.';
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        return; // User closed the popup, no need for error
+      }
+      
+      setToast({ message, type: 'error' });
     }
   };
 
@@ -3604,7 +3615,7 @@ function MainApp() {
                 <div className="max-w-7xl mx-auto px-6">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
                     {TRUST_BADGES.map((badge, i) => (
-                      <div key={i} className="flex flex-col items-center text-center">
+                      <div key={`trust-${i}`} className="flex flex-col items-center text-center">
                         <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center mb-4 shadow-sm"><badge.icon size={28} /></div>
                         <h4 className="font-bold mb-1">{badge.text}</h4>
                         <p className="text-xs text-neutral-500">{badge.subtext}</p>
