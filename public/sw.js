@@ -1,8 +1,8 @@
 const CACHE_NAME = 'aura-pro-v1';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json',
+  './',
+  './index.html',
+  './manifest.json',
   'https://picsum.photos/seed/aura/192/192',
   'https://picsum.photos/seed/aura/512/512'
 ];
@@ -38,14 +38,12 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((response) => {
       return response || fetch(event.request).then((fetchResponse) => {
-        // Don't cache external API calls or large assets dynamically for now
-        // but ensure the app shell is always available
         return fetchResponse;
       });
     }).catch(() => {
       // Fallback to index.html for SPA routing if offline
       if (event.request.mode === 'navigate') {
-        return caches.match('/index.html');
+        return caches.match('./index.html');
       }
     })
   );

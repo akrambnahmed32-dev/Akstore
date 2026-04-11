@@ -15,10 +15,10 @@ window.onerror = function(message, source, lineno, colno, error) {
   }
 };
 
-/* Service Worker Disabled for Debugging
+// Register Service Worker for notifications
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register('./sw.js')
       .then(registration => {
         console.log('SW registered: ', registration);
       })
@@ -27,7 +27,6 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
-*/
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
