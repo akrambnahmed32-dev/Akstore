@@ -6,7 +6,7 @@ import {
   ShoppingCart, Menu, X, Star, ChevronRight, ChevronLeft, ArrowRight, Check, Clock, ShieldCheck, 
   CreditCard, Truck, RotateCcw, Plus, Minus, ArrowLeft, Settings, MapPin, Phone, User, 
   Building2, Home, Tag, AlertCircle, Trash2, PackagePlus, Edit3, Video, Image as ImageIcon,
-  Play, Upload, LogIn, LogOut, CheckCircle2, Move, ZoomIn, ZoomOut, Bell, Smartphone
+  Play, Upload, LogIn, LogOut, CheckCircle2, Move, ZoomIn, ZoomOut, Smartphone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Product, PRODUCTS, REVIEWS, TRUST_BADGES, WILAYAS, COMMUNES } from './constants';
@@ -266,26 +266,6 @@ const ConfirmModal = ({
       </motion.div>
     </div>
   );
-};
-
-// --- Global Notification Helper ---
-const showNotification = (title: string, options?: NotificationOptions) => {
-  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
-
-  // Try standard Notification constructor first
-  try {
-    const notification = new Notification(title, options);
-    return notification;
-  } catch (err) {
-    // Fallback to Service Worker for mobile browsers
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.ready.then(registration => {
-        registration.showNotification(title, options);
-      }).catch(swErr => {
-        console.warn('Notification fallback failed:', swErr);
-      });
-    }
-  }
 };
 
 // --- Custom Alert Modal ---
@@ -2009,9 +1989,7 @@ const AdminPanel = ({
   showAlert,
   showConfirm,
   showPrompt,
-  onClose,
-  notificationHistory,
-  setNotificationHistory
+  onClose
 }: { 
   delivery: DeliveryConfig; 
   setDelivery: (d: DeliveryConfig) => void;
@@ -2029,10 +2007,8 @@ const AdminPanel = ({
   showConfirm: (title: string, message: string, onConfirm: () => void, isDestructive?: boolean) => void;
   showPrompt: (title: string, message: string, onConfirm: (value: string) => void, defaultValue?: string) => void;
   onClose: () => void;
-  notificationHistory: {id: string, title: string, body: string, date: string}[];
-  setNotificationHistory: React.Dispatch<React.SetStateAction<{id: string, title: string, body: string, date: string}[]>>;
 }) => {
-  const [activeTab, setActiveTab] = useState<'settings' | 'orders' | 'products' | 'notifications'>('orders');
+  const [activeTab, setActiveTab] = useState<'settings' | 'orders' | 'products'>('orders');
   const [isSyncing, setIsSyncing] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
@@ -2183,12 +2159,6 @@ const AdminPanel = ({
               className={`px-4 md:px-6 py-2 rounded-xl font-black text-xs md:text-sm transition-all whitespace-nowrap ${activeTab === 'settings' ? 'bg-black text-white shadow-lg' : 'text-neutral-400 hover:bg-neutral-100'}`}
             >
               الإعدادات
-            </button>
-            <button 
-              onClick={() => setActiveTab('notifications')}
-              className={`px-4 md:px-6 py-2 rounded-xl font-black text-xs md:text-sm transition-all whitespace-nowrap ${activeTab === 'notifications' ? 'bg-black text-white shadow-lg' : 'text-neutral-400 hover:bg-neutral-100'}`}
-            >
-              سجل التنبيهات
             </button>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-neutral-200 rounded-full transition-colors flex-shrink-0"><X size={24} /></button>
@@ -2421,40 +2391,6 @@ const AdminPanel = ({
                 </div>
               </section>
             </div>
-          ) : activeTab === 'notifications' ? (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-black text-lg flex items-center gap-2"><Bell size={20} /> سجل التنبيهات الأخيرة</h3>
-                <button 
-                  onClick={() => {
-                    setNotificationHistory([]);
-                    localStorage.removeItem('notification_history');
-                  }}
-                  className="text-[10px] text-red-500 font-bold hover:underline"
-                >
-                  مسح السجل
-                </button>
-              </div>
-              
-              {notificationHistory.length === 0 ? (
-                <div className="text-center py-20 bg-neutral-50 rounded-[2rem] border border-dashed border-neutral-200">
-                  <Bell size={40} className="mx-auto mb-4 text-neutral-300" />
-                  <p className="text-neutral-400 font-bold">لا توجد تنبيهات مسجلة حالياً</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {notificationHistory.map(notif => (
-                    <div key={notif.id} className="p-4 bg-white border border-neutral-100 rounded-2xl hover:border-[#F8A192] transition-colors">
-                      <div className="flex justify-between items-start mb-1">
-                        <span className="font-black text-sm">{notif.title}</span>
-                        <span className="text-[10px] text-neutral-400">{new Date(notif.date).toLocaleTimeString('ar-DZ')}</span>
-                      </div>
-                      <p className="text-xs text-neutral-500 leading-relaxed whitespace-pre-line">{notif.body}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           ) : (
             <div className="space-y-10 max-w-3xl mx-auto">
               {/* Anderson Express Integration */}
@@ -2666,146 +2602,6 @@ const AdminPanel = ({
   );
 };
 
-// --- Notification Manager Component ---
-const NotificationManager = ({ isAdmin, onAddNotification }: { isAdmin: boolean, onAddNotification: (title: string, body: string) => void }) => {
-  const [permission, setPermission] = useState<NotificationPermission>(
-    typeof Notification !== 'undefined' ? Notification.permission : 'default'
-  );
-  const [showSuccess, setShowSuccess] = useState(true);
-  const isInitialLoad = React.useRef(true);
-  const mountTime = React.useRef(new Date().getTime());
-
-  useEffect(() => {
-    if (permission === 'granted') {
-      const timer = setTimeout(() => setShowSuccess(false), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [permission]);
-
-  useEffect(() => {
-    if (!isAdmin || typeof Notification === 'undefined') return;
-
-    const q = query(collection(db, 'orders'), orderBy('date', 'desc'), limit(10));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      if (isInitialLoad.current) {
-        isInitialLoad.current = false;
-        return;
-      }
-
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === 'added') {
-          const orderData = change.doc.data();
-          const orderTime = new Date(orderData.date).getTime();
-          
-          // Only notify if the order was created AFTER the component mounted
-          if (orderTime > mountTime.current && Notification.permission === 'granted') {
-            const itemsInfo = orderData.items.map((item: any) => {
-              let info = item.product.name;
-              const details = [];
-              if (item.selectedSize) details.push(item.selectedSize);
-              if (item.selectedColor) details.push(item.selectedColor);
-              if (details.length > 0) info += ` (${details.join(' - ')})`;
-              return `${info} (x${item.quantity})`;
-            }).join('، ');
-
-            const title = 'طلب جديد مستلم';
-            const body = `الزبون: ${orderData.customerName}\nالطلبية: ${itemsInfo}`;
-            
-            showNotification(title, {
-              body,
-              icon: 'https://picsum.photos/seed/aura/192/192',
-              badge: 'https://picsum.photos/seed/aura/192/192',
-              tag: `order-${orderData.id}`
-            });
-
-            onAddNotification(title, body);
-            
-            // Play a sound if possible
-            try {
-              const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-              audio.play().catch(e => {
-                console.warn('Audio playback was prevented by the browser. Interaction required.');
-              });
-            } catch (e) {
-              console.warn('Audio initialization failed');
-            }
-          }
-        }
-      });
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'orders');
-    });
-
-    return () => unsubscribe();
-  }, [isAdmin]);
-
-  const requestPermission = async () => {
-    if (typeof Notification === 'undefined') return;
-    const result = await Notification.requestPermission();
-    setPermission(result);
-  };
-
-  if (!isAdmin) return null;
-  console.log('NotificationManager rendering for admin', { permission, hasNotification: typeof Notification !== 'undefined' });
-
-  return (
-    <div className="fixed bottom-24 right-4 z-[60] flex flex-col items-end gap-2 pointer-events-none">
-      <div className="pointer-events-auto">
-        {typeof Notification === 'undefined' ? (
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="bg-amber-50 text-amber-700 px-4 py-2 rounded-xl text-[10px] font-bold border border-amber-100 shadow-lg flex items-center gap-2"
-          >
-            <AlertCircle size={14} /> التنبيهات غير مدعومة في هذا المتصفح (جرب فتح التطبيق في نافذة جديدة)
-          </motion.div>
-        ) : permission === 'default' ? (
-          <motion.button
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            onClick={requestPermission}
-            className="bg-[#F8A192] text-white px-6 py-3 rounded-full font-black shadow-2xl flex items-center gap-2 hover:scale-105 transition-transform"
-          >
-            <AlertCircle size={20} /> تفعيل التنبيهات للطلبات الجديدة
-          </motion.button>
-        ) : permission === 'denied' ? (
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="bg-red-50 text-red-600 px-4 py-3 rounded-2xl text-[10px] font-bold border border-red-100 shadow-lg flex flex-col gap-2 max-w-[200px]"
-          >
-            <div className="flex items-center gap-2">
-              <X size={14} /> التنبيهات مرفوضة
-            </div>
-            <p className="text-[9px] opacity-80 leading-tight">
-              يرجى الضغط على أيقونة القفل في شريط العنوان وتفعيل التنبيهات، أو جرب فتح التطبيق في نافذة جديدة.
-            </p>
-            <button 
-              onClick={() => window.open(window.location.href, '_blank')}
-              className="bg-red-600 text-white py-1 px-2 rounded-lg text-[9px] mt-1"
-            >
-              فتح في نافذة جديدة
-            </button>
-          </motion.div>
-        ) : (
-          <AnimatePresence>
-            {showSuccess && (
-              <motion.div 
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="bg-green-50 text-green-600 px-4 py-2 rounded-xl text-[10px] font-bold border border-green-100 shadow-lg flex items-center gap-2"
-              >
-                <CheckCircle2 size={14} /> التنبيهات مفعلة بنجاح ✅
-              </motion.div>
-            )}
-          </AnimatePresence>
-        )}
-      </div>
-    </div>
-  );
-};
-
 // --- Main App ---
 
 interface Order {
@@ -2873,7 +2669,6 @@ function MainApp() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' } | null>(null);
-  const [notificationHistory, setNotificationHistory] = useState<{id: string, title: string, body: string, date: string}[]>([]);
   const [showAdminBanner, setShowAdminBanner] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [quotaExceeded, setQuotaExceeded] = useState(false);
@@ -2885,24 +2680,6 @@ function MainApp() {
       return () => clearTimeout(timer);
     }
   }, [user]);
-
-  useEffect(() => {
-    try {
-      const history = localStorage.getItem('notification_history');
-      if (history) setNotificationHistory(JSON.parse(history));
-    } catch (e) {
-      console.warn("Failed to load notification history");
-    }
-  }, []);
-
-  const addNotificationToHistory = (title: string, body: string) => {
-    setNotificationHistory(prev => {
-      const newEntry = { id: Math.random().toString(36).substr(2, 9), title, body, date: new Date().toISOString() };
-      const updated = [newEntry, ...prev].slice(0, 50);
-      localStorage.setItem('notification_history', JSON.stringify(updated));
-      return updated;
-    });
-  };
 
   useEffect(() => {
     if (toast) {
@@ -3883,16 +3660,9 @@ function MainApp() {
             showConfirm={showConfirm}
             showPrompt={showPrompt}
             onClose={() => setIsAdminOpen(false)} 
-            notificationHistory={notificationHistory}
-            setNotificationHistory={setNotificationHistory}
           />
         )}
       </AnimatePresence>
-
-      <NotificationManager 
-        isAdmin={user?.email === ADMIN_EMAIL} 
-        onAddNotification={addNotificationToHistory}
-      />
 
       <ConfirmModal 
         isOpen={confirmModal.isOpen}
