@@ -12,6 +12,14 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <title>Aura Pro Store</title>
     <!-- Service Worker Disabled for Debugging -->
+    <script>
+      window.onerror = function(message, source, lineno, colno, error) {
+        var root = document.getElementById('root');
+        if (root) {
+          root.innerHTML = '<div style="padding:20px;color:red;text-align:center;dir:rtl;">خطأ في التحميل: ' + message + '<br><small>' + source + ':' + lineno + '</small></div>';
+        }
+      };
+    </script>
   </head>
   <body style="background-color: #f8f9fa;">
     <div id="root">
@@ -20,7 +28,7 @@
         <div id="loading-status">جاري تحميل المتجر...</div>
       </div>
     </div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="src/main.tsx"></script>
   </body>
 </html>
 
