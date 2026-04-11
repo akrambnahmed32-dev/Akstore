@@ -7,10 +7,12 @@ import './index.css';
 window.onerror = function(message, source, lineno, colno, error) {
   console.error('Global error:', message, 'at', source, ':', lineno);
   const root = document.getElementById('root');
-  if (root && root.innerHTML.includes('جاري تحميل')) {
-    root.innerHTML = `<div style="padding: 20px; color: red; font-family: sans-serif;">
-      خطأ في التحميل: ${message}<br/>
-      يرجى محاولة تحديث الصفحة.
+  if (root) {
+    root.innerHTML = `<div style="padding: 40px; color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 20px; font-family: sans-serif; max-width: 500px; margin: 40px auto; text-align: center;" dir="rtl">
+      <h2 style="margin-top: 0;">عذراً، حدث خطأ في التحميل</h2>
+      <p style="font-weight: bold;">${message}</p>
+      <p style="font-size: 12px; opacity: 0.7;">${source}:${lineno}</p>
+      <button onclick="window.location.reload()" style="background: #721c24; color: white; border: none; padding: 10px 20px; rounded: 10px; cursor: pointer; font-weight: bold; margin-top: 10px;">إعادة المحاولة</button>
     </div>`;
   }
 };

@@ -13,8 +13,13 @@
     <title>Aura Pro Store</title>
     <!-- Service Worker Disabled for Debugging -->
   </head>
-  <body>
-    <div id="root"></div>
+  <body style="background-color: #f8f9fa;">
+    <div id="root">
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; color: #333; text-align: center; padding: 20px;">
+        <div style="font-size: 24px; font-weight: bold; margin-bottom: 10px;">Aura Pro Store</div>
+        <div id="loading-status">جاري تحميل المتجر...</div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
