@@ -25,9 +25,7 @@ export const auth = getAuth(app);
 
 // Use initializeFirestore with experimentalForceLongPolling for better iframe compatibility
 // and enable persistence to reduce reads
-export const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true,
-}, firebaseConfig.firestoreDatabaseId);
+export const db = initializeFirestore(app, {}, firebaseConfig.firestoreDatabaseId);
 
 // Enable offline persistence to reduce database reads
 import { enableIndexedDbPersistence, terminate, clearIndexedDbPersistence } from 'firebase/firestore';

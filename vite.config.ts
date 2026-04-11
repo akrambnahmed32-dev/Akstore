@@ -8,16 +8,6 @@ export default defineConfig(({mode}) => {
   return {
     base: '/',
     plugins: [react(), tailwindcss()],
-    build: {
-      chunkSizeWarningLimit: 1000,
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            'vendor': ['react', 'react-dom', 'react-router-dom', 'firebase/app', 'firebase/auth', 'firebase/firestore', 'lucide-react', 'motion'],
-          }
-        }
-      }
-    },
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
     },
