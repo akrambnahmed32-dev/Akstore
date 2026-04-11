@@ -1,7 +1,7 @@
+import './index.css';
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
-import './index.css';
 
 // Global error handler for debugging
 window.onerror = function(message, source, lineno, colno, error) {
@@ -17,10 +17,11 @@ window.onerror = function(message, source, lineno, colno, error) {
   }
 };
 
-// Register Service Worker for notifications
+// Register Service Worker for notifications (Disabled for debugging white screen)
+/*
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
+    navigator.serviceWorker.register('/sw.js')
       .then(registration => {
         console.log('SW registered: ', registration);
       })
@@ -29,6 +30,7 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
+*/
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

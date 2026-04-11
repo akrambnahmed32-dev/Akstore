@@ -2843,13 +2843,21 @@ function MainApp() {
   
   // Initialize from localStorage for speed and quota saving
   const [products, setProducts] = useState<Product[]>(() => {
-    const cached = localStorage.getItem('cached_products');
-    return cached ? JSON.parse(cached) : PRODUCTS;
+    try {
+      const cached = localStorage.getItem('cached_products');
+      return cached ? JSON.parse(cached) : PRODUCTS;
+    } catch (e) {
+      return PRODUCTS;
+    }
   });
   
   const [communes, setCommunes] = useState<Record<string, string[]>>(() => {
-    const cached = localStorage.getItem('cached_communes');
-    return cached ? JSON.parse(cached) : COMMUNES;
+    try {
+      const cached = localStorage.getItem('cached_communes');
+      return cached ? JSON.parse(cached) : COMMUNES;
+    } catch (e) {
+      return COMMUNES;
+    }
   });
 
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -2952,13 +2960,21 @@ function MainApp() {
 
   // Global Config
   const [deliveryConfig, setDeliveryConfig] = useState<DeliveryConfig>(() => {
-    const cached = localStorage.getItem('cached_delivery');
-    return cached ? JSON.parse(cached) : { wilayaCosts: {}, freeShippingThreshold: 100000 };
+    try {
+      const cached = localStorage.getItem('cached_delivery');
+      return cached ? JSON.parse(cached) : { wilayaCosts: {}, freeShippingThreshold: 100000 };
+    } catch (e) {
+      return { wilayaCosts: {}, freeShippingThreshold: 100000 };
+    }
   });
 
   const [promoConfig, setPromoConfig] = useState<PromoConfig>(() => {
-    const cached = localStorage.getItem('cached_promo');
-    return cached ? JSON.parse(cached) : { discountPercent: 0, isActive: false };
+    try {
+      const cached = localStorage.getItem('cached_promo');
+      return cached ? JSON.parse(cached) : { discountPercent: 0, isActive: false };
+    } catch (e) {
+      return { discountPercent: 0, isActive: false };
+    }
   });
 
   // Auth Listener
