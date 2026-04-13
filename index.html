@@ -13,12 +13,32 @@
     <title>Aura Pro Store</title>
     <!-- Service Worker Disabled for Debugging -->
     <script>
+      // Clear service workers and caches to prevent stale broken versions
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for(let registration of registrations) {
+            registration.unregister();
+          }
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(function(names) {
+          for (let name of names) caches.delete(name);
+        });
+      }
+
       window.onerror = function(message, source, lineno, colno, error) {
         var root = document.getElementById('root');
         if (root) {
           root.innerHTML = '<div style="padding:20px;color:red;text-align:center;dir:rtl;">خطأ في التحميل: ' + message + '<br><small>' + source + ':' + lineno + '</small></div>';
         }
       };
+      setTimeout(function() {
+        var status = document.getElementById('loading-status');
+        if (status && status.innerHTML.includes('جاري تحميل المتجر')) {
+          status.innerHTML = 'يبدو أن التحميل يستغرق وقتاً طويلاً. <br><br> إذا كنت تستخدم Vercel، يرجى التأكد من أن إعدادات البناء صحيحة:<br><b>Framework Preset:</b> Vite<br><b>Build Command:</b> npm run build<br><b>Output Directory:</b> dist';
+        }
+      }, 5000);
     </script>
   </head>
   <body style="background-color: #f8f9fa;">
@@ -28,7 +48,7 @@
         <div id="loading-status">جاري تحميل المتجر...</div>
       </div>
     </div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/main.tsx" onerror="document.getElementById('loading-status').innerHTML = 'خطأ: لم يتم تحميل ملفات التطبيق. يرجى التأكد من إعدادات البناء (Build Settings) في Vercel.'"></script>
   </body>
 </html>
 
