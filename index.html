@@ -36,9 +36,36 @@
       setTimeout(function() {
         var status = document.getElementById('loading-status');
         if (status && status.innerHTML.includes('جاري تحميل المتجر')) {
-          status.innerHTML = 'يبدو أن التحميل يستغرق وقتاً طويلاً. <br><br> إذا كنت تستخدم Vercel، يرجى التأكد من أن إعدادات البناء صحيحة:<br><b>Framework Preset:</b> Vite<br><b>Build Command:</b> npm run build<br><b>Output Directory:</b> dist';
+          status.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 15px; align-items: center;">
+              <p>يبدو أن التحميل يستغرق وقتاً طويلاً بسبب ملفات قديمة مخزنة في متصفحك.</p>
+              <button onclick="forceClearAndReload()" style="background: #000; color: #fff; border: none; padding: 12px 24px; border-radius: 12px; font-weight: bold; cursor: pointer;">
+                تحديث إجباري ومسح الذاكرة المؤقتة
+              </button>
+              <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                إذا كنت تستخدم Vercel، يرجى التأكد من أن إعدادات البناء صحيحة:<br>
+                <b>Framework Preset:</b> Vite | <b>Output:</b> dist
+              </p>
+            </div>
+          `;
         }
       }, 5000);
+
+      function forceClearAndReload() {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for(let registration of registrations) registration.unregister();
+          });
+        }
+        if ('caches' in window) {
+          caches.keys().then(function(names) {
+            for (let name of names) caches.delete(name);
+          });
+        }
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.reload(true);
+      }
     </script>
   </head>
   <body style="background-color: #f8f9fa;">
