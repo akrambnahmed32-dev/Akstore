@@ -1,9 +1,7 @@
-import './index.css';
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
-
-console.log('Aura Pro Store: Main script starting...');
+import './index.css';
 
 // Global error handler for debugging
 window.onerror = function(message, source, lineno, colno, error) {
@@ -18,6 +16,19 @@ window.onerror = function(message, source, lineno, colno, error) {
     </div>`;
   }
 };
+
+// Register Service Worker for notifications
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(registration => {
+        console.log('SW registered: ', registration);
+      })
+      .catch(registrationError => {
+        console.log('SW registration failed: ', registrationError);
+      });
+  });
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

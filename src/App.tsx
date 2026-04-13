@@ -6,7 +6,7 @@ import {
   ShoppingCart, Menu, X, Star, ChevronRight, ChevronLeft, ArrowRight, Check, Clock, ShieldCheck, 
   CreditCard, Truck, RotateCcw, Plus, Minus, ArrowLeft, Settings, MapPin, Phone, User, 
   Building2, Home, Tag, AlertCircle, Trash2, PackagePlus, Edit3, Video, Image as ImageIcon,
-  Play, Upload, LogIn, LogOut, CheckCircle2, Move, ZoomIn, ZoomOut, Smartphone
+  Play, Upload, LogIn, LogOut, CheckCircle2, Move, ZoomIn, ZoomOut, Bell, Smartphone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Product, PRODUCTS, REVIEWS, TRUST_BADGES, WILAYAS, COMMUNES } from './constants';
@@ -266,6 +266,26 @@ const ConfirmModal = ({
       </motion.div>
     </div>
   );
+};
+
+// --- Global Notification Helper ---
+const showNotification = (title: string, options?: NotificationOptions) => {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+
+  // Try standard Notification constructor first
+  try {
+    const notification = new Notification(title, options);
+    return notification;
+  } catch (err) {
+    // Fallback to Service Worker for mobile browsers
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(registration => {
+        registration.showNotification(title, options);
+      }).catch(swErr => {
+        console.warn('Notification fallback failed:', swErr);
+      });
+    }
+  }
 };
 
 // --- Custom Alert Modal ---
@@ -1989,7 +2009,9 @@ const AdminPanel = ({
   showAlert,
   showConfirm,
   showPrompt,
-  onClose
+  onClose,
+  notificationHistory,
+  setNotificationHistory
 }: { 
   delivery: DeliveryConfig; 
   setDelivery: (d: DeliveryConfig) => void;
@@ -2007,8 +2029,10 @@ const AdminPanel = ({
   showConfirm: (title: string, message: string, onConfirm: () => void, isDestructive?: boolean) => void;
   showPrompt: (title: string, message: string, onConfirm: (value: string) => void, defaultValue?: string) => void;
   onClose: () => void;
+  notificationHistory: {id: string, title: string, body: string, date: string}[];
+  setNotificationHistory: React.Dispatch<React.SetStateAction<{id: string, title: string, body: string, date: string}[]>>;
 }) => {
-  const [activeTab, setActiveTab] = useState<'settings' | 'orders' | 'products'>('orders');
+  const [activeTab, setActiveTab] = useState<'settings' | 'orders' | 'products' | 'notifications'>('orders');
   const [isSyncing, setIsSyncing] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
@@ -2159,6 +2183,12 @@ const AdminPanel = ({
               className={`px-4 md:px-6 py-2 rounded-xl font-black text-xs md:text-sm transition-all whitespace-nowrap ${activeTab === 'settings' ? 'bg-black text-white shadow-lg' : 'text-neutral-400 hover:bg-neutral-100'}`}
             >
               الإعدادات
+            </button>
+            <button 
+              onClick={() => setActiveTab('notifications')}
+              className={`px-4 md:px-6 py-2 rounded-xl font-black text-xs md:text-sm transition-all whitespace-nowrap ${activeTab === 'notifications' ? 'bg-black text-white shadow-lg' : 'text-neutral-400 hover:bg-neutral-100'}`}
+            >
+              سجل التنبيهات
             </button>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-neutral-200 rounded-full transition-colors flex-shrink-0"><X size={24} /></button>
@@ -2391,8 +2421,190 @@ const AdminPanel = ({
                 </div>
               </section>
             </div>
+          ) : activeTab === 'notifications' ? (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-black text-lg flex items-center gap-2"><Bell size={20} /> سجل التنبيهات الأخيرة</h3>
+                <button 
+                  onClick={() => {
+                    setNotificationHistory([]);
+                    localStorage.removeItem('notification_history');
+                  }}
+                  className="text-[10px] text-red-500 font-bold hover:underline"
+                >
+                  مسح السجل
+                </button>
+              </div>
+              
+              {notificationHistory.length === 0 ? (
+                <div className="text-center py-20 bg-neutral-50 rounded-[2rem] border border-dashed border-neutral-200">
+                  <Bell size={40} className="mx-auto mb-4 text-neutral-300" />
+                  <p className="text-neutral-400 font-bold">لا توجد تنبيهات مسجلة حالياً</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {notificationHistory.map(notif => (
+                    <div key={notif.id} className="p-4 bg-white border border-neutral-100 rounded-2xl hover:border-[#F8A192] transition-colors">
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="font-black text-sm">{notif.title}</span>
+                        <span className="text-[10px] text-neutral-400">{new Date(notif.date).toLocaleTimeString('ar-DZ')}</span>
+                      </div>
+                      <p className="text-xs text-neutral-500 leading-relaxed whitespace-pre-line">{notif.body}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           ) : (
             <div className="space-y-10 max-w-3xl mx-auto">
+              {/* Install App Section */}
+              <section className="p-6 bg-black text-white rounded-[2rem] shadow-xl overflow-hidden relative">
+                <div className="relative z-10">
+                  <h3 className="font-black text-lg mb-2 flex items-center gap-2"><Smartphone size={20} /> تثبيت التطبيق على هاتفك</h3>
+                  
+                  {deferredPrompt ? (
+                    <>
+                      <p className="text-xs text-neutral-400 mb-4 leading-relaxed">
+                        قم بتثبيت Aura Pro Store كتطبيق مستقل للحصول على تجربة أسرع وتنبيهات فورية في لوحة الإشعارات.
+                      </p>
+                      <button 
+                        onClick={installApp}
+                        className="w-full py-3 bg-white text-black rounded-xl text-xs font-black hover:bg-neutral-100 transition-all"
+                      >
+                        تثبيت التطبيق الآن
+                      </button>
+                    </>
+                  ) : (
+                    <div className="space-y-4">
+                      <p className="text-xs text-neutral-400 leading-relaxed">
+                        لتحويل المتجر إلى تطبيق على هاتفك، يرجى اتباع الخطوات التالية:
+                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                          <div className="font-bold text-[10px] text-white mb-1">على أندرويد (Chrome)</div>
+                          <p className="text-[9px] text-neutral-400">اضغط على النقاط الثلاث (⋮) ثم اختر "إضافة إلى الشاشة الرئيسية".</p>
+                        </div>
+                        <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                          <div className="font-bold text-[10px] text-white mb-1">على آيفون (Safari)</div>
+                          <p className="text-[9px] text-neutral-400">اضغط على زر المشاركة (↑) ثم اختر "إضافة إلى الشاشة الرئيسية".</p>
+                        </div>
+                      </div>
+                      <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/20">
+                        <p className="text-[9px] text-amber-200 leading-relaxed">
+                          <strong>ملاحظة:</strong> إذا كنت تتصفح من داخل AI Studio، يرجى الضغط على <strong>"فتح في نافذة جديدة"</strong> أسفل الشاشة أولاً لتتمكن من التثبيت.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
+              </section>
+
+              {/* Notifications Settings */}
+              <section className="p-6 bg-neutral-50 rounded-[2rem] border border-neutral-100">
+                <h3 className="font-black mb-4 flex items-center gap-2"><Bell size={20} /> نظام التنبيهات</h3>
+                <div className="space-y-4">
+                  <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                        <Smartphone size={18} />
+                      </div>
+                      <div>
+                        <div className="font-bold text-xs text-blue-900">للمستخدمين على الهاتف</div>
+                        <p className="text-[10px] text-blue-700 mt-1 leading-relaxed">
+                          لضمان وصول التنبيهات إلى لوحة الإشعارات في هاتفك، يرجى:
+                          <br />
+                          1. الضغط على <strong>"فتح في نافذة جديدة"</strong> أسفل الشاشة.
+                          <br />
+                          2. إضافة التطبيق إلى <strong>الشاشة الرئيسية</strong> (Add to Home Screen).
+                          <br />
+                          3. التأكد من منح إذن التنبيهات عند الطلب.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-neutral-100">
+                    <div>
+                      <div className="font-bold text-sm">حالة التنبيهات</div>
+                      <div className="text-[10px] text-neutral-500">تلقي إشعارات عند وجود طلبات جديدة</div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <div className="flex items-center gap-2">
+                        {typeof Notification === 'undefined' ? (
+                          <span className="text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-1 rounded-lg">غير مدعوم</span>
+                        ) : Notification.permission === 'granted' ? (
+                          <span className="text-[10px] text-green-600 font-bold bg-green-50 px-2 py-1 rounded-lg">مفعلة</span>
+                        ) : Notification.permission === 'denied' ? (
+                          <span className="text-[10px] text-red-600 font-bold bg-red-50 px-2 py-1 rounded-lg">مرفوضة</span>
+                        ) : (
+                          <span className="text-[10px] text-neutral-400 font-bold bg-neutral-100 px-2 py-1 rounded-lg">غير مفعلة</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {typeof Notification !== 'undefined' && Notification.permission === 'granted' && (
+                          <button 
+                            onClick={() => {
+                              showNotification('تنبيه تجريبي', {
+                                body: 'هذا تنبيه تجريبي للتأكد من أن نظام التنبيهات يعمل بشكل صحيح على هاتفك.',
+                                icon: 'https://picsum.photos/seed/aura/192/192',
+                                badge: 'https://picsum.photos/seed/aura/192/192',
+                                tag: 'test-notification'
+                              });
+                              const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+                              audio.play().catch(e => console.warn('Audio playback prevented:', e));
+                            }}
+                            className="text-[10px] text-blue-600 font-bold underline"
+                          >
+                            تجربة التنبيه
+                          </button>
+                        )}
+                        {typeof Notification !== 'undefined' && Notification.permission !== 'granted' && (
+                          <button 
+                            onClick={async () => {
+                              const result = await Notification.requestPermission();
+                              window.location.reload();
+                            }}
+                            className="text-[10px] text-[#F8A192] font-bold underline"
+                          >
+                            {Notification.permission === 'denied' ? 'إعادة المحاولة (بعد التغيير من الإعدادات)' : 'طلب الإذن الآن'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {typeof Notification !== 'undefined' && Notification.permission === 'granted' && (
+                    <button 
+                      onClick={() => {
+                        showNotification('تنبيه تجريبي', {
+                          body: 'هذا تنبيه تجريبي للتأكد من عمل النظام بنجاح.',
+                          icon: 'https://picsum.photos/seed/aura/192/192',
+                          badge: 'https://picsum.photos/seed/aura/192/192',
+                          tag: 'test-notification'
+                        });
+                        try {
+                          const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+                          audio.play().catch(e => console.warn('Audio playback prevented:', e));
+                        } catch (e) {}
+                      }}
+                      className="w-full py-3 bg-neutral-100 rounded-xl text-xs font-black hover:bg-neutral-200 transition-all"
+                    >
+                      إرسال تنبيه تجريبي
+                    </button>
+                  )}
+                  
+                  {typeof Notification !== 'undefined' && Notification.permission === 'default' && (
+                    <button 
+                      onClick={() => Notification.requestPermission().then(() => window.location.reload())}
+                      className="w-full py-3 bg-black text-white rounded-xl text-xs font-black hover:bg-neutral-800 transition-all"
+                    >
+                      تفعيل التنبيهات الآن
+                    </button>
+                  )}
+                </div>
+              </section>
+
               {/* Anderson Express Integration */}
               <section className="p-6 bg-neutral-50 rounded-[2rem] border border-neutral-100">
                 <h3 className="font-black mb-4 flex items-center gap-2"><Truck size={20} /> الربط مع Anderson Express</h3>
@@ -2602,6 +2814,146 @@ const AdminPanel = ({
   );
 };
 
+// --- Notification Manager Component ---
+const NotificationManager = ({ isAdmin, onAddNotification }: { isAdmin: boolean, onAddNotification: (title: string, body: string) => void }) => {
+  const [permission, setPermission] = useState<NotificationPermission>(
+    typeof Notification !== 'undefined' ? Notification.permission : 'default'
+  );
+  const [showSuccess, setShowSuccess] = useState(true);
+  const isInitialLoad = React.useRef(true);
+  const mountTime = React.useRef(new Date().getTime());
+
+  useEffect(() => {
+    if (permission === 'granted') {
+      const timer = setTimeout(() => setShowSuccess(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [permission]);
+
+  useEffect(() => {
+    if (!isAdmin || typeof Notification === 'undefined') return;
+
+    const q = query(collection(db, 'orders'), orderBy('date', 'desc'), limit(10));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      if (isInitialLoad.current) {
+        isInitialLoad.current = false;
+        return;
+      }
+
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === 'added') {
+          const orderData = change.doc.data();
+          const orderTime = new Date(orderData.date).getTime();
+          
+          // Only notify if the order was created AFTER the component mounted
+          if (orderTime > mountTime.current && Notification.permission === 'granted') {
+            const itemsInfo = orderData.items.map((item: any) => {
+              let info = item.product.name;
+              const details = [];
+              if (item.selectedSize) details.push(item.selectedSize);
+              if (item.selectedColor) details.push(item.selectedColor);
+              if (details.length > 0) info += ` (${details.join(' - ')})`;
+              return `${info} (x${item.quantity})`;
+            }).join('، ');
+
+            const title = 'طلب جديد مستلم';
+            const body = `الزبون: ${orderData.customerName}\nالطلبية: ${itemsInfo}`;
+            
+            showNotification(title, {
+              body,
+              icon: 'https://picsum.photos/seed/aura/192/192',
+              badge: 'https://picsum.photos/seed/aura/192/192',
+              tag: `order-${orderData.id}`
+            });
+
+            onAddNotification(title, body);
+            
+            // Play a sound if possible
+            try {
+              const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+              audio.play().catch(e => {
+                console.warn('Audio playback was prevented by the browser. Interaction required.');
+              });
+            } catch (e) {
+              console.warn('Audio initialization failed');
+            }
+          }
+        }
+      });
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'orders');
+    });
+
+    return () => unsubscribe();
+  }, [isAdmin]);
+
+  const requestPermission = async () => {
+    if (typeof Notification === 'undefined') return;
+    const result = await Notification.requestPermission();
+    setPermission(result);
+  };
+
+  if (!isAdmin) return null;
+  console.log('NotificationManager rendering for admin', { permission, hasNotification: typeof Notification !== 'undefined' });
+
+  return (
+    <div className="fixed bottom-24 right-4 z-[60] flex flex-col items-end gap-2 pointer-events-none">
+      <div className="pointer-events-auto">
+        {typeof Notification === 'undefined' ? (
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="bg-amber-50 text-amber-700 px-4 py-2 rounded-xl text-[10px] font-bold border border-amber-100 shadow-lg flex items-center gap-2"
+          >
+            <AlertCircle size={14} /> التنبيهات غير مدعومة في هذا المتصفح (جرب فتح التطبيق في نافذة جديدة)
+          </motion.div>
+        ) : permission === 'default' ? (
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            onClick={requestPermission}
+            className="bg-[#F8A192] text-white px-6 py-3 rounded-full font-black shadow-2xl flex items-center gap-2 hover:scale-105 transition-transform"
+          >
+            <AlertCircle size={20} /> تفعيل التنبيهات للطلبات الجديدة
+          </motion.button>
+        ) : permission === 'denied' ? (
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="bg-red-50 text-red-600 px-4 py-3 rounded-2xl text-[10px] font-bold border border-red-100 shadow-lg flex flex-col gap-2 max-w-[200px]"
+          >
+            <div className="flex items-center gap-2">
+              <X size={14} /> التنبيهات مرفوضة
+            </div>
+            <p className="text-[9px] opacity-80 leading-tight">
+              يرجى الضغط على أيقونة القفل في شريط العنوان وتفعيل التنبيهات، أو جرب فتح التطبيق في نافذة جديدة.
+            </p>
+            <button 
+              onClick={() => window.open(window.location.href, '_blank')}
+              className="bg-red-600 text-white py-1 px-2 rounded-lg text-[9px] mt-1"
+            >
+              فتح في نافذة جديدة
+            </button>
+          </motion.div>
+        ) : (
+          <AnimatePresence>
+            {showSuccess && (
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="bg-green-50 text-green-600 px-4 py-2 rounded-xl text-[10px] font-bold border border-green-100 shadow-lg flex items-center gap-2"
+              >
+                <CheckCircle2 size={14} /> التنبيهات مفعلة بنجاح ✅
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // --- Main App ---
 
 interface Order {
@@ -2634,33 +2986,18 @@ function MainApp() {
   const location = useLocation();
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    try {
-      const cached = localStorage.getItem('aura_cart');
-      return cached ? JSON.parse(cached) : [];
-    } catch (e) {
-      return [];
-    }
-  });
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   
   // Initialize from localStorage for speed and quota saving
   const [products, setProducts] = useState<Product[]>(() => {
-    try {
-      const cached = localStorage.getItem('cached_products');
-      return cached ? JSON.parse(cached) : PRODUCTS;
-    } catch (e) {
-      return PRODUCTS;
-    }
+    const cached = localStorage.getItem('cached_products');
+    return cached ? JSON.parse(cached) : PRODUCTS;
   });
   
   const [communes, setCommunes] = useState<Record<string, string[]>>(() => {
-    try {
-      const cached = localStorage.getItem('cached_communes');
-      return cached ? JSON.parse(cached) : COMMUNES;
-    } catch (e) {
-      return COMMUNES;
-    }
+    const cached = localStorage.getItem('cached_communes');
+    return cached ? JSON.parse(cached) : COMMUNES;
   });
 
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -2669,6 +3006,7 @@ function MainApp() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' } | null>(null);
+  const [notificationHistory, setNotificationHistory] = useState<{id: string, title: string, body: string, date: string}[]>([]);
   const [showAdminBanner, setShowAdminBanner] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [quotaExceeded, setQuotaExceeded] = useState(false);
@@ -2680,6 +3018,20 @@ function MainApp() {
       return () => clearTimeout(timer);
     }
   }, [user]);
+
+  useEffect(() => {
+    const history = localStorage.getItem('notification_history');
+    if (history) setNotificationHistory(JSON.parse(history));
+  }, []);
+
+  const addNotificationToHistory = (title: string, body: string) => {
+    setNotificationHistory(prev => {
+      const newEntry = { id: Math.random().toString(36).substr(2, 9), title, body, date: new Date().toISOString() };
+      const updated = [newEntry, ...prev].slice(0, 50);
+      localStorage.setItem('notification_history', JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   useEffect(() => {
     if (toast) {
@@ -2748,21 +3100,13 @@ function MainApp() {
 
   // Global Config
   const [deliveryConfig, setDeliveryConfig] = useState<DeliveryConfig>(() => {
-    try {
-      const cached = localStorage.getItem('cached_delivery');
-      return cached ? JSON.parse(cached) : { wilayaCosts: {}, freeShippingThreshold: 100000 };
-    } catch (e) {
-      return { wilayaCosts: {}, freeShippingThreshold: 100000 };
-    }
+    const cached = localStorage.getItem('cached_delivery');
+    return cached ? JSON.parse(cached) : { wilayaCosts: {}, freeShippingThreshold: 100000 };
   });
 
   const [promoConfig, setPromoConfig] = useState<PromoConfig>(() => {
-    try {
-      const cached = localStorage.getItem('cached_promo');
-      return cached ? JSON.parse(cached) : { discountPercent: 0, isActive: false };
-    } catch (e) {
-      return { discountPercent: 0, isActive: false };
-    }
+    const cached = localStorage.getItem('cached_promo');
+    return cached ? JSON.parse(cached) : { discountPercent: 0, isActive: false };
   });
 
   // Auth Listener
@@ -3660,9 +4004,16 @@ function MainApp() {
             showConfirm={showConfirm}
             showPrompt={showPrompt}
             onClose={() => setIsAdminOpen(false)} 
+            notificationHistory={notificationHistory}
+            setNotificationHistory={setNotificationHistory}
           />
         )}
       </AnimatePresence>
+
+      <NotificationManager 
+        isAdmin={user?.email === ADMIN_EMAIL} 
+        onAddNotification={addNotificationToHistory}
+      />
 
       <ConfirmModal 
         isOpen={confirmModal.isOpen}

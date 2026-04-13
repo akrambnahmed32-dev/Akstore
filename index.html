@@ -10,23 +10,13 @@
     <link rel="apple-touch-icon" href="https://picsum.photos/seed/aura/192/192" />
     <link rel="manifest" href="manifest.json" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet">
-    
     <title>Aura Pro Store</title>
-    <!-- Global Error Handler -->
+    <!-- Service Worker Disabled for Debugging -->
     <script>
       window.onerror = function(message, source, lineno, colno, error) {
-        console.error('Initial load error:', message);
         var root = document.getElementById('root');
         if (root) {
-          root.innerHTML = '<div style="padding:40px;color:#721c24;background:#f8d7da;border:1px solid #f5c6cb;border-radius:20px;font-family:sans-serif;max-width:500px;margin:40px auto;text-align:center;dir:rtl;">' +
-            '<h2 style="margin-top:0;">عذراً، حدث خطأ في التحميل</h2>' +
-            '<p><b>' + message + '</b></p>' +
-            '<button onclick="localStorage.clear();window.location.reload();" style="background:#721c24;color:white;border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:bold;">مسح الذاكرة وإعادة المحاولة</button>' +
-            '</div>';
+          root.innerHTML = '<div style="padding:20px;color:red;text-align:center;dir:rtl;">خطأ في التحميل: ' + message + '<br><small>' + source + ':' + lineno + '</small></div>';
         }
       };
     </script>
@@ -36,7 +26,6 @@
       <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; color: #333; text-align: center; padding: 20px;">
         <div style="font-size: 24px; font-weight: bold; margin-bottom: 10px;">Aura Pro Store</div>
         <div id="loading-status">جاري تحميل المتجر...</div>
-        <div style="margin-top: 20px; font-size: 10px; color: #999;">Version 1.0.5</div>
       </div>
     </div>
     <script type="module" src="/src/main.tsx"></script>
